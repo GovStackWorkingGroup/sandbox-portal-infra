@@ -30,3 +30,6 @@ override.tf.json
 
 # Ignore zip files created for lambdas
 *.zip
+
+# Osx stuff
+.DS_Store
