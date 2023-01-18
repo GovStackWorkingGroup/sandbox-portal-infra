@@ -94,7 +94,7 @@ data "aws_iam_policy_document" "lambda_logging_policy_document" {
 resource "aws_iam_policy" "lamda_logging_policy" {
   name   = "LambdaAllowLoggingPolicy"
   path   = "/"
-  policy = data.aws_iam_policy_document.lambda_logging_policy_document.josn
+  policy = data.aws_iam_policy_document.lambda_logging_policy_document.json
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_logging_policy_attachment" {
