@@ -1,11 +1,11 @@
-variable "region" {
-  default = ""
+variable "environment" {
+  type = string
 }
 
-variable "environment" {
-  default = "devi"
+variable "send_email" {
+  type = string
 }
 
 variable "product" {
-  default = "porttaali"
+  type = string
 }
