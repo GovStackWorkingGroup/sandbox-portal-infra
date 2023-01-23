@@ -1,6 +1,3 @@
-locals {
-  ses_from_adress = "example@example.com"
-}
 # S3 bucket for lambda functions
 resource "aws_s3_bucket" "lamdbabucket" {
   bucket = "govstack-dev-portal-functions-bucket"
@@ -165,7 +162,7 @@ resource "aws_s3_object" "signInObject" {
 
     environment {
       variables = {
-        "SES_FROM_ADDRESS" = local.ses_from_adress
+        "SES_FROM_ADDRESS" = var.ses_from_adress
         "USER_POOL_ID" = aws_cognito_user_pool.sandbox_userpool.id
       }
     }

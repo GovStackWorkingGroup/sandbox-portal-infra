@@ -2,7 +2,7 @@ variable "environment" {
   type = string
 }
 
-variable "send_email" {
+variable "ses_from_adress" {
   type = string
 }
 

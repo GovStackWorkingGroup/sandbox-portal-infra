@@ -1,5 +1,5 @@
 resource "aws_cognito_user_pool" "sandbox_userpool" {
-  name = "sandbox-dev-user-pool"
+  name = "sandbox-${var.product}-${var.environment}-userpool-userpool"
 
   password_policy {
     require_numbers = false
@@ -51,7 +51,7 @@ resource "aws_cognito_user_pool" "sandbox_userpool" {
 
 
 resource "aws_cognito_user_pool_client" "sandbox_userpool_client" {
-  name = "sandbox-dev-user-pool-client"
+  name = "sandbox-${var.product}-${var.environment}-userpool-client"
 
   user_pool_id = aws_cognito_user_pool.sandbox_userpool.id
   generate_secret  = true
