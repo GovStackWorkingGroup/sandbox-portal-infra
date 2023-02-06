@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "PortalRestApi" {
   
-  name = "DevPortalRest"
+  name = "Sandbox-${var.product}-${var.environment}-SignIn-Api"
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -26,5 +26,15 @@ resource "aws_api_gateway_integration" "integration" {
   http_method             = aws_api_gateway_method.method.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.signInLambda.invoke_arn
+  uri                     = module.signIn.lambda_invoke_arn
+}
+
+data "aws_caller_identity" "current" {}
+
+locals {
+    account = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_ses_email_identity" "ses_from_address" {
+  email = var.ses_from_address
 }
