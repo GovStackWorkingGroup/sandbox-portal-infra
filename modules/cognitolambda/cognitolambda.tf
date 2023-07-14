@@ -31,16 +31,15 @@ resource "null_resource" "lambda_package" {
 
   provisioner "local-exec" {
     command = "npm install; tsc"
-   #command = "pwd;ls"
     working_dir = local.work_dir
     on_failure = continue
  }
 
   triggers = {
-  index = sha256(file("${local.work_dir}/${var.lambdaName}.ts"))
-  package = sha256(file("${local.work_dir}/package.json"))
-  tsconfig = sha256(file("${local.work_dir}/tsconfig.json"))
-  #modify ="yes" # change value when you want to force this
+    index = sha256(file("${var.lambdaName}.ts"))
+    package = sha256(file("package.json"))
+    tsconfig = sha256(file("tsconfig.json"))
+    # modify ="yes" # change value when you want to force this
   }
 }
 

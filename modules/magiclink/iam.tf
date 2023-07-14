@@ -1,112 +1,40 @@
-data "aws_iam_policy_document" "lambda_assume_role_policy_document" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
-}
-# Roles for lambdas
+resource "aws_api_gateway_rest_api" "PortalRestApi" {
+  
+  name = "Sandbox-${var.product}-${var.environment}-SignIn-Api"
 
-resource "aws_iam_role" "createAuth_lambda_iam_role" {
-  name = "createAuthChallengeLambdaIamRole"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy_document.json
-}
-
-resource "aws_iam_role" "defineAuth_lambda_iam_role" {
-  name = "defineAuthChallengeeLambdaIamRole"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy_document.json
-}
-
-resource "aws_iam_role" "postAuth_lambda_role" {
-  name = "PostAuthLambdaIamRole"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy_document.json
-}
-
-resource "aws_iam_role" "preSignup_lambda_role" {
-  name = "PreSignUpLambdaIamRole"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy_document.json
-}
-
-resource "aws_iam_role" "verifyAuth_lambda_role" {
-  name = "verifyAuthChallengeLambdaIamRole"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy_document.json
-}
-
-resource "aws_iam_role" "signIn_lambda_iam_role" {
-  name = "SignInLambdaIamRole"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy_document.json
-}
-
-
-# Policy for SES email sending for SignIn
-
-data "aws_iam_policy_document" "signin_lambda_ses_policy_document" {
-  statement {
-    sid = "LambdaSendEmailSES"
-    actions = [
-      "ses:sendEmail"
-    ]
-    resources = [
-      aws_ses_email_identity.ses_from_address.arn
-      ]
+  endpoint_configuration {
+    types = ["REGIONAL"]
   }
 }
 
-resource "aws_iam_policy" "signIn_lambda_ses_policy" {
-  name   = "LambdaSendEmailSESPolicy"
-  path   = "/"
-  policy = data.aws_iam_policy_document.signin_lambda_ses_policy_document.json
+resource "aws_api_gateway_resource" "PortalApiResource" {
+  path_part   = "signIn"
+  parent_id   = aws_api_gateway_rest_api.PortalRestApi.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.PortalRestApi.id
 }
 
-resource "aws_iam_role_policy_attachment" "ses_policy_attachment" {
-  role = aws_iam_role.signIn_lambda_iam_role.name
-  policy_arn = aws_iam_policy.signIn_lambda_ses_policy.arn
-  depends_on = [
-    aws_iam_policy.signIn_lambda_ses_policy
-  ]
+resource "aws_api_gateway_method" "method" {
+  rest_api_id   = aws_api_gateway_rest_api.PortalRestApi.id
+  resource_id   = aws_api_gateway_resource.PortalApiResource.id
+  http_method   = "GET"
+  authorization = "NONE"
 }
 
-
-#Policy for cognito update for postAuthentication and SignIn
-
-data "aws_iam_policy_document" "lambda_update_cognito_documment" {
-  statement {
-    sid = "LambdaUpdateCognito"
-    actions = [
-      "cognito-idp:AdminUpdateUserAttributes"
-    ]
-    resources = [
-      aws_cognito_user_pool.sandbox_userpool.arn
-    ]
-  }
+resource "aws_api_gateway_integration" "integration" {
+  rest_api_id             = aws_api_gateway_rest_api.PortalRestApi.id
+  resource_id             = aws_api_gateway_resource.PortalApiResource.id
+  http_method             = aws_api_gateway_method.method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = module.signIn.lambda_invoke_arn
 }
 
-resource "aws_iam_policy" "lamda_update_cognito_policy" {
-  name   = "LambdaUpdateCognitoPolicy"
-  path   = "/"
-  policy = data.aws_iam_policy_document.lambda_update_cognito_documment.json
+data "aws_caller_identity" "current" {}
+
+locals {
+    account = data.aws_caller_identity.current.account_id
 }
 
-
-# Attach cognito policy for signin and postauth
-
-resource "aws_iam_role_policy_attachment" "postauth_cognito_policy_attachment" {
-  role = aws_iam_role.postAuth_lambda_role.name
-  policy_arn = aws_iam_policy.lamda_update_cognito_policy.arn
-  depends_on = [
-    aws_iam_policy.lamda_update_cognito_policy
-  ]
+resource "aws_ses_email_identity" "ses_from_address" {
+  email = var.ses_from_address
 }
-
-resource "aws_iam_role_policy_attachment" "signIn_cognito_policy_attachment" {
-  role = aws_iam_role.signIn_lambda_iam_role.name
-  policy_arn = aws_iam_policy.lamda_update_cognito_policy.arn
-  depends_on = [
-    aws_iam_policy.lamda_update_cognito_policy
-  ]
-}
-
-#kato mitkä lambdat vaati mitäkin noista
-#ehkäpä yksi rooli muille, omat niille mitkä vaatii
